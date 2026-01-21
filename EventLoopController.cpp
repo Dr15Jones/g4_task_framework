@@ -25,6 +25,7 @@ void EventLoopController::processEventAsync(tbb::task_group &tg)
             return; // No more events to process
         }
         event_.clear();
+        event_.setId(nextEventOpt.value());
         processNextModulesAsync(tg, 0); });
 }
 void EventLoopController::processNextModulesAsync(tbb::task_group &tg, int index)

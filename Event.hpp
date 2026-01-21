@@ -6,8 +6,10 @@
 #include <unordered_map>
 class Event {
 public:
-    Event(int iLoop) : id_(iLoop) {}
-    int loopID() const { return id_; }
+friend class EventLoopController; // Allow EventLoopController to access private members
+    Event(int iLoop) : loopId_(iLoop) {}
+    int id() const { return id_; }
+    int loopID() const { return loopId_; }
     void setData(const std::string& key, const std::any& value) {
         data_[key] = value;
     }
@@ -18,11 +20,18 @@ public:
         }
         return {};
     }
+private:
+    //called by framework
     void clear() {
         data_.clear();
     }
-private:
-    int id_;
+    //called by framework
+    void setId(int id) {
+        id_ = id;
+    }
+
+    int loopId_;
+    int id_ = 0;
     std::unordered_map<std::string, std::any> data_;
 };
 #endif
