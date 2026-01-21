@@ -1,5 +1,3 @@
-#include "Module.hpp"
-
 #include "EventProcessor.hpp"
 
 int main(int argc, char *argv[])
@@ -9,6 +7,10 @@ int main(int argc, char *argv[])
     int nThreads = 4;
 
     EventProcessor processor(numEvents, numConcurrentLoops, nThreads);
+
+    // Add modules to the processor
+    // ModuleA moduleA;
+    // processor.addModuleToAllLoops(&moduleA);
     processor.run();
 
     return 0;

@@ -36,3 +36,11 @@ add_executable(g4_task_framework
 
 # Link executable to library
 target_link_libraries(g4_task_framework PRIVATE G4TaskFramework)
+
+
+add_executable(test_g4_task_framework
+    test_main.cc
+)
+
+# Link executable to library
+target_link_libraries(test_g4_task_framework PRIVATE G4TaskFramework)
