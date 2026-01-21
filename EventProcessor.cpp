@@ -19,12 +19,13 @@ void EventProcessor::addModuleToAllLoops(Module *module)
 }
 void EventProcessor::run()
 {
-    tbb::task_group tg;
     tbb::task_arena arena(nThreads_);
     arena.execute([&]()
                   {
+                       tbb::task_group tg;
+ 
             for (auto& controller : controllers_) {
                 controller.runAsync(tg);
-            } });
-    tg.wait();
+        }
+        tg.wait(); });
 }
