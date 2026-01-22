@@ -1,5 +1,6 @@
 #include "EventProcessor.hpp"
 #include "ReentrantModule.hpp"
+#include "LoopCloneModule.hpp"
 #include <iostream>
 #include <format>
 
@@ -31,16 +32,26 @@ namespace {
       std::optional<int> throwExceptionOnEvent_;
   };
 
-  class ModuleC : public ReentrantModule {
+  class ModuleC {
   public:
-    void processEvent(Event& event) const final {
+    void processEvent(Event& event) {
       auto v = event.getData("ModuleB_Processed");
       if( not (v.has_value() && std::any_cast<bool>(v) == true)) {
         throw std::runtime_error("ModuleB_Processed data missing or incorrect in ModuleC");
       }
       event.setData("ModuleC_Processed", true);
+      ++count_;
+      loopID_ = event.loopID();
     }
+    
+    ~ModuleC() {
+      std::cout << std::format("ModuleC in loop {} processed {} events.\n", loopID_, count_) << std::flush;
+    }
+    private:
+      int count_{0};
+      int loopID_{-1};
   };
+  using LoopCloneModuleC = LoopCloneModule<ModuleC>;
   class ModuleD : public ReentrantModule {
   public:
     void processEvent(Event& event) const final {
@@ -65,7 +76,7 @@ int main(int argc, char* argv[]) {
   // Uncomment the next line to test exception handling
   // throwExceptionOnEvent = 42;
   ModuleB moduleB(throwExceptionOnEvent);
-  ModuleC moduleC;
+  LoopCloneModuleC moduleC(numConcurrentLoops);
   ModuleD moduleD;
   processor.addModuleToAllLoops(&moduleA);
   processor.addModuleToAllLoops(&moduleB);
