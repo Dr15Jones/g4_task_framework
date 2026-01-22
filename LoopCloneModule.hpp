@@ -13,7 +13,7 @@ template <typename T>
 class LoopCloneModule : public AsyncModule {
 public:
   template <typename... Args>
-  LoopCloneModule(int nConcurrentEventLoops, Args... args) : modules_() {
+  LoopCloneModule(int nConcurrentEventLoops, Args... args) : modules_(), handles_(nConcurrentEventLoops) {
     modules_.reserve(nConcurrentEventLoops);
     for (int i = 0; i < nConcurrentEventLoops; ++i) {
       modules_.emplace_back(args...);
@@ -25,13 +25,17 @@ public:
       throw std::out_of_range("Invalid loop ID in LoopCloneModule");
     }
     auto& clone = modules_[loopID];
-    iGroup.run([this, &iGroup, handle = std::move(iHandle), &iEvent, &clone]() {
-      const_cast<T&>(clone).processEvent(iEvent);
-      iGroup.run(std::move(const_cast<tbb::task_handle&>(handle)));
+    handles_[loopID] = std::move(iHandle);
+    auto& handle = handles_[loopID];
+    iGroup.run([&iGroup, &handle, &iEvent, &clone]() {
+      auto localHandle = std::move(handle);
+      clone.processEvent(iEvent);
+      iGroup.run(std::move(localHandle));
     });
   }
 
 private:
-  std::vector<T> modules_;
+  mutable std::vector<T> modules_;
+  mutable std::vector<tbb::task_handle> handles_;
 };
 #endif
