@@ -5,12 +5,12 @@
 #include "EventLoopController.hpp"
 #include "EventSource.hpp"
 
-class Module;
+class AsyncModule;
 
 class EventProcessor {
 public:
   EventProcessor(int nEvents, int nConcurrentLoops, int nThreads);
-  void addModuleToAllLoops(Module* module);
+  void addModuleToAllLoops(AsyncModule* module);
   void run();
 
 private:

@@ -9,7 +9,7 @@ EventProcessor::EventProcessor(int nEvents, int nConcurrentLoops, int nThreads)
     controllers_.emplace_back(eventSource_, i);
   }
 }
-void EventProcessor::addModuleToAllLoops(Module* module) {
+void EventProcessor::addModuleToAllLoops(AsyncModule* module) {
   for (auto& controller : controllers_) {
     controller.addModule(module);
   }

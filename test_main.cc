@@ -1,36 +1,53 @@
 #include "EventProcessor.hpp"
-#include "Module.hpp"
+#include "ReentrantModule.hpp"
 #include <iostream>
-#include <cassert>
 #include <format>
 
 namespace {
-  class ModuleA : public Module {
+  class ModuleA : public AsyncModule {
   public:
-    void processEvent(Event& event) override { event.setData("ModuleA_Processed", true); }
-  };
-  class ModuleB : public Module {
-  public:
-    void processEvent(Event& event) override {
-      auto v = event.getData("ModuleA_Processed");
-      assert(v.has_value() && std::any_cast<bool>(v) == true);
-      event.setData("ModuleB_Processed", true);
+    void processEventAsync(tbb::task_group& iGroup, tbb::task_handle iHandle, Event& event) const final {
+        iGroup.run([&event, group = &iGroup, handle = std::move(iHandle)]() {
+            event.setData("ModuleA_Processed", true);
+            // Continue processing by calling the handle
+            group->run(std::move(const_cast<tbb::task_handle&>(handle)));
+        }); 
     }
   };
-
-  class ModuleC : public Module {
+  class ModuleB : public ReentrantModule {
   public:
-    void processEvent(Event& event) override {
+    explicit ModuleB(std::optional<int> throwExceptionOnEvent ): throwExceptionOnEvent_(throwExceptionOnEvent) {}
+    void processEvent(Event& event) const final {
+      if (throwExceptionOnEvent_.has_value() and event.id() == *(throwExceptionOnEvent_)) {
+        throw std::runtime_error("test failure");
+      }
+      auto v = event.getData("ModuleA_Processed");
+      if( not (v.has_value() && std::any_cast<bool>(v) == true)) {
+        throw std::runtime_error("ModuleA_Processed data missing or incorrect in ModuleB");
+      }
+      event.setData("ModuleB_Processed", true);
+    }
+    private:
+      std::optional<int> throwExceptionOnEvent_;
+  };
+
+  class ModuleC : public ReentrantModule {
+  public:
+    void processEvent(Event& event) const final {
       auto v = event.getData("ModuleB_Processed");
-      assert(v.has_value() && std::any_cast<bool>(v) == true);
+      if( not (v.has_value() && std::any_cast<bool>(v) == true)) {
+        throw std::runtime_error("ModuleB_Processed data missing or incorrect in ModuleC");
+      }
       event.setData("ModuleC_Processed", true);
     }
   };
-  class ModuleD : public Module {
+  class ModuleD : public ReentrantModule {
   public:
-    void processEvent(Event& event) override {
+    void processEvent(Event& event) const final {
       auto v = event.getData("ModuleC_Processed");
-      assert(v.has_value() && std::any_cast<bool>(v) == true);
+      if( not (v.has_value() && std::any_cast<bool>(v) == true)) {
+        throw std::runtime_error("ModuleC_Processed data missing or incorrect in ModuleD");
+      }
       std::cout << std::format("Event {} in loop {} processed successfully.\n", event.id(), event.loopID())
                 << std::flush;
     }
@@ -44,7 +61,10 @@ int main(int argc, char* argv[]) {
 
   EventProcessor processor(numEvents, numConcurrentLoops, nThreads);
   ModuleA moduleA;
-  ModuleB moduleB;
+  std::optional<int> throwExceptionOnEvent;
+  // Uncomment the next line to test exception handling
+  // throwExceptionOnEvent = 42;
+  ModuleB moduleB(throwExceptionOnEvent);
   ModuleC moduleC;
   ModuleD moduleD;
   processor.addModuleToAllLoops(&moduleA);

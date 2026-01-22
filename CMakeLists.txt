@@ -15,7 +15,9 @@ find_package(TBB REQUIRED)
 # Create shared library
 add_library(G4TaskFramework SHARED
     Event.hpp
-    Module.hpp
+    AsyncModule.hpp
+    ReentrantModule.hpp
+    ReentrantModule.cpp
     EventSource.hpp
     EventLoopController.hpp
     EventLoopController.cpp
