@@ -7,19 +7,18 @@
 class EventSource;
 class Module;
 
-class EventLoopController
-{
+class EventLoopController {
 public:
-    EventLoopController(EventSource &eventSource, int loopID);
-    void runAsync(tbb::task_group &tg);
+  EventLoopController(EventSource& eventSource, int loopID);
+  void runAsync(tbb::task_group& tg);
 
-    void addModule(Module *module);
+  void addModule(Module* module);
 
 private:
-    void processEventAsync(tbb::task_group &tg);
-    void processNextModulesAsync(tbb::task_group &tg, int index);
-    EventSource &eventSource_;
-    Event event_;
-    std::vector<Module *> modules_;
+  void processEventAsync(tbb::task_group& tg);
+  void processNextModulesAsync(tbb::task_group& tg, int index);
+  EventSource& eventSource_;
+  Event event_;
+  std::vector<Module*> modules_;
 };
 #endif

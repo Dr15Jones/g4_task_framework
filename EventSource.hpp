@@ -4,26 +4,20 @@
 #include <optional>
 #include <atomic>
 
-class EventSource
-{
+class EventSource {
 public:
-    EventSource(int numEvents) : numEvents_(numEvents) {}
-    std::optional<int> nextEvent()
-    {
-        if (currentEvent_ < numEvents_)
-        {
-            return currentEvent_++;
-        }
-        else
-        {
-            return {};
-        }
+  EventSource(int numEvents) : numEvents_(numEvents) {}
+  std::optional<int> nextEvent() {
+    if (currentEvent_ < numEvents_) {
+      return currentEvent_++;
+    } else {
+      return {};
     }
+  }
 
 private:
-    const int numEvents_;
-    std::atomic<int> currentEvent_ = 0;
+  const int numEvents_;
+  std::atomic<int> currentEvent_ = 0;
 };
-
 
 #endif

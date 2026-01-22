@@ -5,8 +5,8 @@
 
 class Module {
 public:
-    virtual ~Module() = default;
-    virtual void processEvent(Event& event) = 0;
+  virtual ~Module() = default;
+  virtual void processEvent(Event& event) = 0;
 };
 
 #endif
