@@ -22,6 +22,10 @@ void EventProcessor::run() {
     for (auto& controller : controllers_) {
       controller.runAsync(tg);
     }
-    tg.wait();
+    try {
+      tg.wait();
+    } catch (const std::exception& e) {
+      std::cerr << "Exception caught in EventProcessor::run: " << e.what() << std::endl;
+    }
   });
 }
